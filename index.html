@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPics - Daily Word Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+        h1 { font-size: 2rem; background: linear-gradient(90deg, #ff6b35, #f7c531); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .help-btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,107,53,0.4);
+        }
+        .help-btn:hover { transform: scale(1.1); }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #ff6b35; }
+        .stat-label { font-size: 0.75rem; opacity: 0.7; }
+        .game-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .picture-box { text-align: center; margin-bottom: 20px; }
+        .picture-box img {
+            width: 100%;
+            max-width: 280px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 3px solid #ff6b35;
+        }
+        .category { display: inline-block; background: #ff6b35; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; margin-top: 10px; }
+        .hint { margin-top: 8px; opacity: 0.7; font-size: 0.9rem; }
+        .grid { display: grid; gap: 8px; margin: 20px 0; justify-content: center; }
+        .tile {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .tile.filled { border-color: #ff6b35; }
+        .tile.correct { background: #10b981; border-color: #10b981; }
+        .tile.present { background: #f7c531; color: #000; border-color: #f7c531; }
+        .tile.absent { background: #444; border-color: #444; }
+        .keyboard { margin-top: 15px; }
+        .key-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
+        .key {
+            padding: 12px 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .key:hover { background: rgba(255,255,255,0.2); }
+        .key.wide { padding: 12px 15px; }
+        .share-btn { display: none; width: 100%; padding: 15px; margin-top: 15px; background: linear-gradient(90deg, #10b981, #059669); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .share-btn.show { display: block; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #1a1a2e; padding: 30px; border-radius: 20px; max-width: 400px; margin: 20px; }
+        .modal h2 { color: #ff6b35; margin-bottom: 15px; }
+        .modal p, .modal li { opacity: 0.8; line-height: 1.6; }
+        .modal ul { padding-left: 20px; margin: 10px 0; }
+        .modal button { width: 100%; padding: 12px; background: #ff6b35; border: none; border-radius: 8px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .legend { display: flex; gap: 15px; margin: 15px 0; flex-wrap: wrap; }
+        .legend span { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+        .legend-box { width: 20px; height: 20px; border-radius: 4px; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #ff6b35; padding: 12px 25px; border-radius: 10px; font-weight: bold; transition: transform 0.3s; z-index: 2000; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+
+    <div class="header">
+        <h1>WORDPICS</h1>
+        <button class="help-btn" onclick="showModal('help')">?</button>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-value" id="played">0</div><div class="stat-label">Played</div></div>
+        <div class="stat"><div class="stat-value" id="won">0</div><div class="stat-label">Won</div></div>
+        <div class="stat"><div class="stat-value" id="streak">0</div><div class="stat-label">Streak</div></div>
+    </div>
+
+    <div class="game-card">
+        <div class="picture-box">
+            <img id="picture" src="" alt="Hint">
+            <div class="category" id="category">Loading...</div>
+            <p class="hint" id="hintText">Guess the word!</p>
+        </div>
+
+        <div class="grid" id="grid"></div>
+        
+        <div class="keyboard" id="keyboard"></div>
+        
+        <button class="share-btn" id="shareBtn" onclick="share()">🎉 Share Result</button>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h2>📖 How to Play <span style="float:right;cursor:pointer;opacity:0.7;" onclick="showModal()">✕</span></h2>
+            <p>Guess the word from the picture in 6 tries!</p>
+            <ul>
+                <li>Each guess must be a valid word</li>
+                <li>After guessing, tiles show feedback</li>
+            </ul>
+            <div class="legend">
+                <span><div class="legend-box" style="background:#10b981"></div> Correct</span>
+                <span><div class="legend-box" style="background:#f7c531"></div> Wrong pos</span>
+                <span><div class="legend-box" style="background:#444"></div> Wrong</span>
+            </div>
+            <p><strong>Example:</strong> Answer = TIGER, you guess TIRED</p>
+            <p style="margin-top:5px">T = 🟩 correct, I = 🟨 wrong pos, R,E,D = ⬛ wrong</p>
+            <button onclick="showModal()">Let's Play!</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <h2 style="text-align:center">🎉 Brilliant! <span style="float:right;cursor:pointer;opacity:0.7;" onclick="showModal()">✕</span></h2>
+            <p style="text-align:center">You got it!</p>
+            <div style="text-align:center;font-size:3rem;font-weight:bold;color:#f7c531;margin:15px 0;" id="winStreak">1</div>
+            <p style="text-align:center">day streak</p>
+            <button onclick="showModal()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        const puzzles = [
+            { word: "TIGER", category: "Animal", img: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=400&h=300&fit=crop", hint: "Big cat with stripes" },
+            { word: "CLOUD", category: "Tech", img: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400&h=300&fit=crop", hint: "Sky shapes or computing" },
+            { word: "PIZZA", category: "Food", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop", hint: "Cheesy Italian round food" },
+            { word: "BEACH", category: "Holiday", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop", hint: "Sand and sea" },
+            { word: "HORSE", category: "Animal", img: "https://images.unsplash.com/photo-1534773728080-33d31da27ae5?w=400&h=300&fit=crop", hint: "Fast animal, rides" },
+            { word: "SNAKE", category: "Animal", img: "https://images.unsplash.com/photo-1531386151447-fd76ad50012f?w=400&h=300&fit=crop", hint: "No legs, slides" },
+            { word: "CASTLE", category: "Building", img: "https://images.unsplash.com/photo-1533154683836-84ea7a0bc310?w=400&h=300&fit=crop", hint: "Medieval fort" },
+            { word: "FROG", category: "Animal", img: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop", hint: "Jumps, croaks" },
+            { word: "DUCK", category: "Animal", img: "https://images.unsplash.com/photo-1555852095-64e7428df0e6?w=400&h=300&fit=crop", hint: "Quacks, water bird" },
+            { word: "LION", category: "Animal", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&h=300&fit=crop", hint: "King of jungle" }
+        ];
+
+        const today = new Date();
+        const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+        const puzzle = puzzles[seed % puzzles.length];
+        const TARGET = puzzle.word.toUpperCase();
+        const LEN = TARGET.length;
+        const MAX = 6;
+
+        let guess = "", guesses = [], gameOver = false;
+        let stats = JSON.parse(localStorage.getItem("wp_stats")) || { p:0, w:0, s:0, first:false };
+
+        document.getElementById("picture").src = puzzle.img;
+        document.getElementById("category").textContent = puzzle.category + " • " + LEN + " letters";
+        document.getElementById("hintText").textContent = puzzle.hint;
+
+        function init() {
+            createGrid();
+            createKeyboard();
+            updateStats();
+            if (!stats.first) { stats.first = true; save(); setTimeout(()=>showModal('help'),500); }
+            document.addEventListener("keydown", e => {
+                if(gameOver) return;
+                const k = e.key.toUpperCase();
+                if(k==="ENTER") submit();
+                else if(k==="BACKSPACE") guess=guess.slice(0,-1), renderRow();
+                else if(/^[A-Z]/.test(k) && guess.length<LEN) guess+=k, renderRow();
+            });
+            
+            document.querySelectorAll('.modal').forEach(m => {
+                m.addEventListener('click', function(e) {
+                    if (e.target === this) this.classList.remove('show');
+                });
+            });
+        }
+
+        function createGrid() {
+            const g = document.getElementById("grid");
+            g.innerHTML = "";
+            g.style.gridTemplateColumns = `repeat(${LEN},50px)`;
+            for(let r=0; r<MAX; r++) {
+                for(let c=0; c<LEN; c++) {
+                    const d = document.createElement("div");
+                    d.className = "tile";
+                    d.id = `t-${r}-${c}`;
+                    g.appendChild(d);
+                }
+            }
+        }
+
+        function createKeyboard() {
+            const rows = ["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+            const kb = document.getElementById("keyboard");
+            kb.innerHTML = "";
+            rows.forEach((row,i) => {
+                const r = document.createElement("div");
+                r.className = "key-row";
+                if(i===2) {
+                    const e = document.createElement("button");
+                    e.className = "key wide"; e.textContent = "ENTER";
+                    e.onclick = submit; r.appendChild(e);
+                }
+                row.split("").forEach(c => {
+                    const b = document.createElement("button");
+                    b.className = "key"; b.textContent = c;
+                    b.id = "k-"+c;
+                    b.onclick = () => { if(guess.length<LEN) guess+=c, renderRow(); };
+                    r.appendChild(b);
+                });
+                if(i===2) {
+                    const b = document.createElement("button");
+                    b.className = "key wide"; b.textContent = "⌫";
+                    b.onclick = () => { guess=guess.slice(0,-1); renderRow(); };
+                    r.appendChild(b);
+                }
+                kb.appendChild(r);
+            });
+        }
+
+        function renderRow() {
+            for(let c=0; c<LEN; c++) {
+                const t = document.getElementById(`t-${guesses.length}-${c}`);
+                t.textContent = guess[c] || "";
+                t.className = "tile" + (guess[c] ? " filled" : "");
+            }
+        }
+
+        function submit() {
+            if(guess.length !== LEN) { toast("Need "+LEN+" letters!"); return; }
+            guesses.push(guess);
+            
+            for(let c=0; c<LEN; c++) {
+                const t = document.getElementById(`t-${guesses.length-1}-${c}`);
+                const res = getResult(guess, c);
+                t.classList.add(res);
+                updateKey(guess[c], res);
+            }
+
+            if(guess === TARGET) {
+                gameOver = true;
+                stats.p++; stats.w++; stats.s++;
+                toast("🎉 Brilliant!");
+                document.getElementById("shareBtn").classList.add("show");
+                setTimeout(() => {
+                    document.getElementById("winStreak").textContent = stats.s;
+                    showModal("win");
+                }, 1000);
+            } else if(guesses.length >= MAX) {
+                gameOver = true;
+                stats.p++; stats.s=0;
+                toast("The word was " + TARGET);
+            }
+            save(); updateStats();
+            guess = "";
+        }
+
+        function getResult(g, i) {
+            if(g[i]===TARGET[i]) return "correct";
+            if(TARGET.includes(g[i])) return "present";
+            return "absent";
+        }
+
+        function updateKey(l, r) {
+            const k = document.getElementById("k-"+l);
+            if(!k) return;
+            if(r==="correct") k.className = "key correct";
+            else if(r==="present" && !k.classList.contains("correct")) k.className = "key present";
+            else if(r==="absent" && !k.classList.contains("correct") && !k.classList.contains("present")) k.className = "key absent";
+        }
+
+        function updateStats() {
+            document.getElementById("played").textContent = stats.p;
+            document.getElementById("won").textContent = stats.w;
+            document.getElementById("streak").textContent = stats.s;
+        }
+
+        function save() { localStorage.setItem("wp_stats", JSON.stringify(stats)); }
+
+        function toast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg;
+            t.classList.add("show");
+            setTimeout(()=>t.classList.remove("show"), 2000);
+        }
+
+        function showModal(id) {
+            document.querySelectorAll(".modal").forEach(m=>m.classList.remove("show"));
+            if(id) document.getElementById(id+"Modal").classList.add("show");
+        }
+
+        function share() {
+            const d = new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+            let text = `WordPics ${d} ${guesses.length}/${MAX}\n\n`;
+            guesses.forEach(g => {
+                g.split("").forEach((c,i) => {
+                    text += {correct:"🟩",present:"🟨",absent:"⬛"}[getResult(g,i)];
+                });
+                text += "\n";
+            });
+            navigator.clipboard.writeText(text).then(()=>toast("Copied!"));
+        }
+
+        init();
+    </script>
+</body>
+</html>
