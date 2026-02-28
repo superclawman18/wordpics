@@ -87,19 +87,25 @@
         .keyboard { margin-top: 15px; }
         .key-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
         .key {
-            padding: 12px 10px;
+            padding: 14px 8px;
+            min-width: 32px;
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
             color: white;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
             text-transform: uppercase;
+            flex: 1;
         }
         .key:hover { background: rgba(255,255,255,0.2); }
         .key.wide { padding: 12px 15px; }
         .share-btn { display: none; width: 100%; padding: 15px; margin-top: 15px; background: linear-gradient(90deg, #10b981, #059669); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
         .share-btn.show { display: block; }
+        .hint-btn { width: 100%; padding: 10px; margin-top: 10px; background: rgba(255,107,53,0.2); border: 2px solid #ff6b35; border-radius: 8px; color: #ff6b35; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+        .hint-btn:hover { background: rgba(255,107,53,0.3); }
+        .hint-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal.show { display: flex; }
@@ -123,6 +129,8 @@
         <button class="help-btn" onclick="showModal('help')">?</button>
     </div>
 
+    <p style="text-align:center;opacity:0.7;font-size:0.9rem;margin-bottom:15px;">Guess the word from the picture! 🖼️</p>
+
     <div class="stats">
         <div class="stat"><div class="stat-value" id="played">0</div><div class="stat-label">Played</div></div>
         <div class="stat"><div class="stat-value" id="won">0</div><div class="stat-label">Won</div></div>
@@ -137,6 +145,8 @@
         </div>
 
         <div class="grid" id="grid"></div>
+        
+        <button class="hint-btn" id="hintBtn" onclick="useHint()">💡 Get a Hint</button>
         
         <div class="keyboard" id="keyboard"></div>
         
@@ -346,6 +356,16 @@
                 text += "\n";
             });
             navigator.clipboard.writeText(text).then(()=>toast("Copied!"));
+        }
+
+        let hintUsed = false;
+        function useHint() {
+            if(hintUsed || gameOver) return;
+            // Show first letter
+            toast("First letter: " + TARGET[0]);
+            hintUsed = true;
+            document.getElementById("hintBtn").disabled = true;
+            document.getElementById("hintBtn").textContent = "Hint Used ✓";
         }
 
         init();
