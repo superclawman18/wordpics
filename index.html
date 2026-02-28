@@ -31,6 +31,30 @@
         .stat-value { font-size: 1.4rem; font-weight: bold; color: #ff6b35; }
         .stat-label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; }
         
+        .difficulty-selector { 
+            display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; 
+        }
+        .diff-btn {
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+        .diff-btn.selected { opacity: 1; }
+        .diff-btn.easy { background: #10b981; color: white; }
+        .diff-btn.easy.selected { border-color: #059669; box-shadow: 0 0 10px #10b981; }
+        .diff-btn.medium { background: #f7c531; color: #000; }
+        .diff-btn.medium.selected { border-color: #d4a000; box-shadow: 0 0 10px #f7c531; }
+        .diff-btn.hard { background: #ef4444; color: white; }
+        .diff-btn.hard.selected { border-color: #b91c1c; box-shadow: 0 0 10px #ef4444; }
+        
+        .points-display { text-align: center; margin-bottom: 10px; font-size: 0.9rem; }
+        .points-display span { color: #f7c531; font-weight: bold; }
+        
         .category-tag { 
             display: inline-block; background: linear-gradient(90deg, #ff6b35, #f7c531); 
             padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; 
@@ -52,7 +76,7 @@
         .picture-box img:hover { transform: scale(1.02); }
         .hint { margin-top: 8px; opacity: 0.7; font-size: 0.9rem; }
         
-        .grid { display: grid; gap: 6px; margin: 15px 0; justify-content: center; }
+        .answer-row { display: flex; gap: 6px; justify-content: center; margin: 15px 0; }
         .tile {
             width: 46px;
             height: 46px;
@@ -71,10 +95,42 @@
         .tile.present { background: #f7c531; color: #000; border-color: #f7c531; }
         .tile.absent { background: #3a3a4a; border-color: #3a3a4a; }
         
-        .controls { display: flex; gap: 10px; margin-top: 10px; }
-        .hint-btn { flex: 1; padding: 10px; background: rgba(255,107,53,0.15); border: 2px solid #ff6b35; border-radius: 8px; color: #ff6b35; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+        .history { margin-top: 10px; }
+        .history-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 4px; }
+        .history-tile {
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .controls { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .hint-btn { 
+            flex: 1; padding: 10px; background: rgba(255,107,53,0.15); border: 2px solid #ff6b35; 
+            border-radius: 8px; color: #ff6b35; font-size: 0.85rem; font-weight: bold; cursor: pointer; min-width: 120px;
+        }
         .hint-btn:hover { background: rgba(255,107,53,0.25); }
         .hint-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .check-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #ff6b35, #f7c531);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+        .check-btn:hover { opacity: 0.9; }
         
         .keyboard { margin-top: 15px; }
         .key-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 6px; }
@@ -145,7 +201,7 @@
         <button class="help-btn" onclick="showModal('help')">?</button>
     </div>
 
-    <p class="instruction">👆 Tap picture to zoom • Guess the word in the picture!</p>
+    <p class="instruction">👆 Tap picture to zoom • Select difficulty below</p>
 
     <div class="stats">
         <div class="stat"><div class="stat-value" id="streak">0</div><div class="stat-label">Streak</div></div>
@@ -154,23 +210,35 @@
     </div>
 
     <div class="game-card">
+        <div class="difficulty-selector">
+            <button class="diff-btn easy selected" onclick="setDifficulty('easy')">😊 Easy</button>
+            <button class="diff-btn medium" onclick="setDifficulty('medium')">😐 Medium</button>
+            <button class="diff-btn hard" onclick="setDifficulty('hard')">😤 Hard</button>
+        </div>
+        
+        <div class="points-display" id="pointsDisplay">Possible points: <span id="possiblePts">100</span></div>
+        
         <div style="text-align:center;">
             <span class="category-tag" id="category">Loading...</span>
         </div>
         
         <div class="picture-box">
             <img id="picture" src="" alt="Hint" onclick="zoomImg()">
-            <p class="hint" id="hintText">Tap 🔍 to zoom &amp; look closer!</p>
+            <p class="hint" id="hintText">Tap 🔍 to zoom & look closer!</p>
         </div>
 
-        <div class="grid" id="grid"></div>
+        <div class="answer-row" id="answerRow"></div>
         
-        <p class="guess-counter" id="guessCounter">Guesses: 0</p>
+        <p class="guess-counter" id="guessCounter">Guesses: 0 (Unlimited!)</p>
         
         <div class="controls">
-            <button class="hint-btn" id="hint1" onclick="buyHint(1)">💡 Hint (-10 pts)</button>
-            <button class="hint-btn" id="hint2" onclick="buyHint(2)">💡💡 Hint (-25 pts)</button>
+            <button class="hint-btn" id="hint1" onclick="buyHint(1)">💡 Hint (-15 pts)</button>
+            <button class="hint-btn" id="hint2" onclick="buyHint(2)">💡💡 Hint (-30 pts)</button>
         </div>
+        
+        <button class="check-btn" id="checkBtn" onclick="submitAnswer()">✓ CHECK MY ANSWER</button>
+        
+        <div class="history" id="history"></div>
         
         <div class="keyboard" id="keyboard"></div>
         
@@ -181,17 +249,20 @@
     <div class="modal" id="helpModal">
         <div class="modal-content">
             <h2>📖 How to Play <span style="float:right;cursor:pointer;opacity:0.7;" onclick="showModal()">✕</span></h2>
-            <p>Guess the word from the picture in unlimited tries!</p>
+            <p>Guess the word from the picture!</p>
             <ul>
-                <li>Tap the picture to <strong>zoom in</strong> for details</li>
+                <li>Select <strong>difficulty</strong> - Easy/Medium/Hard</li>
+                <li>Tap picture to <strong>zoom in</strong></li>
+                <li>Type your guess and click <strong>CHECK MY ANSWER</strong></li>
                 <li>Use hints if stuck (costs points)</li>
-                <li>Longer streaks = more points!</li>
+                <li>Unlimited guesses!</li>
             </ul>
             <div class="legend">
                 <span><div class="legend-box" style="background:#10b981"></div> Correct</span>
                 <span><div class="legend-box" style="background:#f7c531"></div> Wrong pos</span>
                 <span><div class="legend-box" style="background:#3a3a4a"></div> Wrong</span>
             </div>
+            <p style="margin-top:10px;"><strong>Points:</strong><br>Easy: 50pts | Medium: 100pts | Hard: 200pts<br>Minus hints used & guesses made</p>
             <button onclick="showModal()">Let's Play!</button>
         </div>
     </div>
@@ -201,7 +272,7 @@
         <div class="modal-content">
             <h2 style="text-align:center">🎉 Brilliant! <span style="float:right;cursor:pointer;opacity:0.7;" onclick="showModal()">✕</span></h2>
             <p style="text-align:center;font-size:1.2rem;">You got it!</p>
-            <div style="text-align:center;font-size:2.5rem;font-weight:bold;color:#f7c531;margin:15px 0;" id="winPoints">+50</div>
+            <div style="text-align:center;font-size:2.5rem;font-weight:bold;color:#f7c531;margin:15px 0;" id="winPoints">+100</div>
             <p style="text-align:center">points earned!</p>
             <p style="text-align:center;margin-top:10px;opacity:0.7;" id="streakMsg">🔥 3 day streak!</p>
             <button onclick="showModal()">Continue</button>
@@ -209,61 +280,107 @@
     </div>
 
     <script>
+        // Puzzle database with clues for each difficulty
         const puzzleData = [
             // Animals
-            { word: "TIGER", category: "Animal", img: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=600&h=400&fit=crop" },
-            { word: "LION", category: "Animal", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&h=400&fit=crop" },
-            { word: "EAGLE", category: "Animal", img: "https://images.unsplash.com/photo-1503063680822-1f2a272b0f71?w=600&h=400&fit=crop" },
-            { word: "ZEBRA", category: "Animal", img: "https://images.unsplash.com/photo-1505144808419-1957a94ca61e?w=600&h=400&fit=crop" },
-            { word: "PANDA", category: "Animal", img: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=600&h=400&fit=crop" },
+            { word: "TIGER", category: "Animal", 
+              easy: "A big cat with stripes", medium: "Wild cat with orange stripes", hard: "Felis tigris",
+              img: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=600&h=400&fit=crop" },
+            { word: "LION", category: "Animal", 
+              easy: "The king of the jungle", medium: "Big cat with a mane", hard: "Panthera leo",
+              img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&h=400&fit=crop" },
+            { word: "EAGLE", category: "Animal", 
+              easy: "A large bird of prey", medium: "Bird with sharp talons", hard: "Aquila chrysaetos",
+              img: "https://images.unsplash.com/photo-1503063680822-1f2a272b0f71?w=600&h=400&fit=crop" },
+            { word: "PANDA", category: "Animal", 
+              easy: "Black and white bear", medium: "Bamboo-eating bear", hard: "Ailuropoda melanoleuca",
+              img: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=600&h=400&fit=crop" },
+            { word: "KOALA", category: "Animal", 
+              easy: "Australian marsupial", medium: "Bear-like creature that eats eucalyptus", hard: "Phascolarctos cinereus",
+              img: "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=600&h=400&fit=crop" },
             // Food
-            { word: "PIZZA", category: "Food", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop" },
-            { word: "BURGER", category: "Food", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop" },
-            { word: "SUSHI", category: "Food", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=400&fit=crop" },
-            { word: "PASTA", category: "Food", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&h=400&fit=crop" },
+            { word: "PIZZA", category: "Food", 
+              easy: "Italian round food with cheese", medium: "Flatbread with tomato and cheese", hard: "Cirneus",
+              img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop" },
+            { word: "BURGER", category: "Food", 
+              easy: "Sandwich with meat patty", medium: "Ground beef in a bun", hard: "Hamburger",
+              img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop" },
+            { word: "SUSHI", category: "Food", 
+              easy: "Japanese rice with fish", medium: "Raw fish on rice", hard: "Nigiri-zushi",
+              img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=400&fit=crop" },
+            { word: "PASTA", category: "Food", 
+              easy: "Italian noodles", medium: "Dried wheat flour strands", hard: "Pasta italiana",
+              img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&h=400&fit=crop" },
+            { word: "TACOS", category: "Food", 
+              easy: "Mexican folded tortilla", medium: "Corn tortilla with meat filling", hard: "Taco de tortilla de maíz",
+              img: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=600&h=400&fit=crop" },
             // Nature
-            { word: "BEACH", category: "Nature", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
-            { word: "MOUNTAIN", category: "Nature", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop" },
-            { word: "WATERFALL", category: "Nature", img: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=600&h=400&fit=crop" },
-            { word: "RAINBOW", category: "Nature", img: "https://images.unsplash.com/photo-1535104957924-96c01c1a5c73?w=600&h=400&fit=crop" },
+            { word: "BEACH", category: "Nature", 
+              easy: "Sand by the sea", medium: "Sandy shoreline", hard: "Litus maritimum",
+              img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop" },
+            { word: "MOUNTAIN", category: "Nature", 
+              easy: "Very tall land", medium: "High rocky peak", hard: "Mons magnus",
+              img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&h=400&fit=crop" },
+            { word: "WATERFALL", category: "Nature", 
+              easy: "Falling water", medium: "Water dropping from a height", hard: "Cataracta",
+              img: "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=600&h=400&fit=crop" },
+            { word: "RAINBOW", category: "Nature", 
+              easy: "Colors after rain", medium: "Arch of colors in sky", hard: "Arcus pluvius",
+              img: "https://images.unsplash.com/photo-1535104957924-96c01c1a5c73?w=600&h=400&fit=crop" },
+            { word: "VOLCANO", category: "Nature", 
+              easy: "Mountain that erupts", medium: "Mountain with lava", hard: "Mons ignifer",
+              img: "https://images.unsplash.com/photo-1562356953-8ad0477e9d2c?w=600&h=400&fit=crop" },
             // Places
-            { word: "CASTLE", category: "Place", img: "https://images.unsplash.com/photo-1533154683836-84ea7a0bc310?w=600&h=400&fit=crop" },
-            { word: "LIGHTHOUSE", category: "Place", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop" },
-            { word: "BRIDGE", category: "Place", img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&h=400&fit=crop" },
+            { word: "CASTLE", category: "Place", 
+              easy: "Medieval fortress", medium: "Fortified royal residence", hard: "Arx fortis",
+              img: "https://images.unsplash.com/photo-1533154683836-84ea7a0bc310?w=600&h=400&fit=crop" },
+            { word: "LIGHTHOUSE", category: "Place", 
+              easy: "Tower with light for ships", medium: "Coastal beacon", hard: "Pharus maritimus",
+              img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop" },
+            { word: "BRIDGE", category: "Place", 
+              easy: "Road over water", medium: "Structure spanning gap", hard: "Pontem",
+              img: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&h=400&fit=crop" },
+            { word: "WINDMILL", category: "Place", 
+              easy: "Spinning blades for power", medium: "Building with rotating sails", hard: "Mola venti",
+              img: "https://images.unsplash.com/photo-1532408840957-031d8034aeef?w=600&h=400&fit=crop" },
             // Objects
-            { word: "GUITAR", category: "Object", img: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=400&fit=crop" },
-            { word: "CAMERA", category: "Object", img: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&h=400&fit=crop" },
-            { word: "BICYCLE", category: "Object", img: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&h=400&fit=crop" },
-            { word: "UMBRELLA", category: "Object", img: "https://images.unsplash.com/photo-1523354827770-b56552601352?w=600&h=400&fit=crop" }
+            { word: "GUITAR", category: "Object", 
+              easy: "String instrument", medium: "Six-string musical instrument", hard: "Cithara",
+              img: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&h=400&fit=crop" },
+            { word: "CAMERA", category: "Object", 
+              easy: "Takes photos", medium: "Device for capturing images", hard: "Machina photographica",
+              img: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&h=400&fit=crop" },
+            { word: "UMBRELLA", category: "Object", 
+              easy: "Keeps rain off", medium: "Portable rain protection", hard: "Parasolla",
+              img: "https://images.unsplash.com/photo-1523354827770-b56552601352?w=600&h=400&fit=crop" },
+            { word: "PIANO", category: "Object", 
+              easy: "Keyboard instrument", medium: "Instrument with black and white keys", hard: "Clavichordium",
+              img: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=600&h=400&fit=crop" }
         ];
 
+        const DIFFICULTY_POINTS = { easy: 50, medium: 100, hard: 200 };
+        
         const today = new Date();
         const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
         const puzzle = puzzleData[seed % puzzleData.length];
         const TARGET = puzzle.word.toUpperCase();
         const LEN = TARGET.length;
         
-        // Calculate max rows based on word length
-        const MAX_ROWS = 6;
-
-        let guess = "", guesses = [], gameOver = false;
+        let guess = "", guesses = [], gameOver = false, historyShown = [];
+        let difficulty = 'easy';
         let hintLevel = 0;
-        let stats = JSON.parse(localStorage.getItem("wp_stats_v2")) || { 
+        let stats = JSON.parse(localStorage.getItem("wp_stats_v3")) || { 
             streak: 0, points: 0, best: 0, lastPlay: null, totalWins: 0 
         };
 
-        // Check if already played today
         const todayStr = today.toDateString();
         const wasPlayed = stats.lastPlay === todayStr;
 
-        document.getElementById("picture").src = puzzle.img;
-        document.getElementById("zoomImg").src = puzzle.img;
-        document.getElementById("category").textContent = puzzle.category + " • " + LEN + " letters";
-
         function init() {
-            createGrid();
+            createAnswerRow();
             createKeyboard();
             updateStats();
+            updateHint();
             
             if (!stats.firstVisit) { 
                 stats.firstVisit = true; 
@@ -271,17 +388,18 @@
                 setTimeout(()=>showModal('help'),500); 
             }
             
-            // If already played today, show the solved state
             if (wasPlayed) {
-                showAlreadyPlayed();
+                toast("Already played today! Come back tomorrow.");
+                gameOver = true;
+                document.getElementById("checkBtn").disabled = true;
             }
             
             document.addEventListener("keydown", e => {
-                if(gameOver && wasPlayed) return;
+                if(gameOver) return;
                 const k = e.key.toUpperCase();
-                if(k==="ENTER") submit();
-                else if(k==="BACKSPACE") guess=guess.slice(0,-1), renderRow();
-                else if(/^[A-Z]/.test(k) && guess.length<LEN) guess+=k, renderRow();
+                if(k==="ENTER") submitAnswer();
+                else if(k==="BACKSPACE") guess=guess.slice(0,-1), renderAnswerRow();
+                else if(/^[A-Z]/.test(k) && guess.length<LEN) guess+=k, renderAnswerRow();
             });
             
             document.querySelectorAll('.modal').forEach(m => {
@@ -291,17 +409,14 @@
             });
         }
 
-        function createGrid() {
-            const g = document.getElementById("grid");
-            g.innerHTML = "";
-            g.style.gridTemplateColumns = `repeat(${LEN},46px)`;
-            for(let r=0; r<MAX_ROWS; r++) {
-                for(let c=0; c<LEN; c++) {
-                    const d = document.createElement("div");
-                    d.className = "tile";
-                    d.id = `t-${r}-${c}`;
-                    g.appendChild(d);
-                }
+        function createAnswerRow() {
+            const row = document.getElementById("answerRow");
+            row.innerHTML = "";
+            for(let c=0; c<LEN; c++) {
+                const d = document.createElement("div");
+                d.className = "tile";
+                d.id = `t-${c}`;
+                row.appendChild(d);
             }
         }
 
@@ -321,21 +436,21 @@
                 if (rowIdx === 2) {
                     const e = document.createElement("button");
                     e.className = "key wide"; e.textContent = "ENTER";
-                    e.onclick = submit; r.appendChild(e);
+                    e.onclick = submitAnswer; r.appendChild(e);
                 }
                 
                 row.forEach(c => {
                     const b = document.createElement("button");
                     b.className = "key"; b.textContent = c;
                     b.id = "k-"+c;
-                    b.onclick = () => { if(guess.length<LEN) guess+=c, renderRow(); };
+                    b.onclick = () => { if(guess.length<LEN) guess+=c, renderAnswerRow(); };
                     r.appendChild(b);
                 });
                 
                 if (rowIdx === 2) {
                     const b = document.createElement("button");
                     b.className = "key wide"; b.innerHTML = "⌫";
-                    b.onclick = () => { guess=guess.slice(0,-1); renderRow(); };
+                    b.onclick = () => { guess=guess.slice(0,-1); renderAnswerRow(); };
                     r.appendChild(b);
                 }
                 
@@ -343,30 +458,51 @@
             });
         }
 
-        function renderRow() {
+        function renderAnswerRow() {
             for(let c=0; c<LEN; c++) {
-                const t = document.getElementById(`t-${guesses.length}-${c}`);
+                const t = document.getElementById(`t-${c}`);
                 t.textContent = guess[c] || "";
                 t.className = "tile" + (guess[c] ? " filled" : "");
             }
-            document.getElementById("guessCounter").textContent = `Guesses: ${guesses.length + (guess.length > 0 ? 1 : 0)}`;
+            document.getElementById("guessCounter").textContent = `Guesses: ${guesses.length} (Unlimited!)`;
         }
 
-        function submit() {
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelector(`.diff-btn.${level}`).classList.add('selected');
+            document.getElementById("possiblePts").textContent = DIFFICULTY_POINTS[level];
+            updateHint();
+        }
+
+        function updateHint() {
+            const clue = difficulty === 'easy' ? puzzle.easy : (difficulty === 'medium' ? puzzle.medium : puzzle.hard);
+            document.getElementById("hintText").textContent = clue;
+            document.getElementById("picture").src = puzzle.img;
+            document.getElementById("zoomImg").src = puzzle.img;
+            document.getElementById("category").textContent = puzzle.category + " • " + LEN + " letters";
+        }
+
+        function submitAnswer() {
+            if(gameOver) return;
             if(guess.length !== LEN) { toast("Need "+LEN+" letters!"); return; }
             
-            // Reveal letters based on hints
-            const rowIdx = guesses.length;
-            for(let c=0; c<LEN; c++) {
-                const t = document.getElementById(`t-${rowIdx}-${c}`);
-                const res = getResult(guess, c);
-                t.classList.add(res);
-                updateKey(guess[c], res);
-            }
-
-            guesses.push(guess);
+            const guessUpper = guess.toUpperCase();
             
-            if(guess === TARGET) {
+            // Check each letter
+            for(let c=0; c<LEN; c++) {
+                const t = document.getElementById(`t-${c}`);
+                const res = getResult(guessUpper, c);
+                t.classList.add(res);
+                updateKey(guessUpper[c], res);
+            }
+            
+            guesses.push(guessUpper);
+            historyShown.push({ guess: guessUpper, results: Array.from({length: LEN}, (_, i) => getResult(guessUpper, i)) });
+            
+            renderHistory();
+            
+            if(guessUpper === TARGET) {
                 gameOver = true;
                 const pts = calculatePoints();
                 stats.points += pts;
@@ -375,7 +511,7 @@
                 if(stats.streak > stats.best) stats.best = stats.streak;
                 stats.lastPlay = todayStr;
                 
-                toast("🎉 Brilliant! +" + pts);
+                toast("🎉 Brilliant! +" + pts + " pts!");
                 document.getElementById("shareBtn").classList.add("show");
                 save(); updateStats();
                 
@@ -383,19 +519,36 @@
                     document.getElementById("winPoints").textContent = "+" + pts;
                     document.getElementById("streakMsg").textContent = stats.streak > 1 ? `🔥 ${stats.streak} day streak!` : "First win!";
                     showModal("win");
-                }, 1000);
+                }, 500);
             } else {
-                toast("Try again!");
+                toast("Wrong! Try again!");
             }
             guess = "";
+            setTimeout(renderAnswerRow, 500);
+        }
+
+        function renderHistory() {
+            const hist = document.getElementById("history");
+            hist.innerHTML = "";
+            historyShown.forEach((entry, rowIdx) => {
+                const row = document.createElement("div");
+                row.className = "history-row";
+                entry.guess.split("").forEach((c, i) => {
+                    const tile = document.createElement("div");
+                    tile.className = "history-tile " + entry.results[i];
+                    tile.textContent = c;
+                    row.appendChild(tile);
+                });
+                hist.appendChild(row);
+            });
         }
 
         function calculatePoints() {
-            let pts = 50; // Base points
-            pts -= guesses.length * 5; // Fewer guesses = more points
-            pts -= hintLevel * 10; // Hint penalty
-            pts += stats.streak * 10; // Streak bonus
-            return Math.max(pts, 10); // Minimum 10 points
+            let pts = DIFFICULTY_POINTS[difficulty];
+            pts -= guesses.length * 5;
+            pts -= hintLevel * 10;
+            pts += stats.streak * 15;
+            return Math.max(pts, 10);
         }
 
         function getResult(g, i) {
@@ -418,13 +571,13 @@
             document.getElementById("best").textContent = stats.best;
         }
 
-        function save() { localStorage.setItem("wp_stats_v2", JSON.stringify(stats)); }
+        function save() { localStorage.setItem("wp_stats_v3", JSON.stringify(stats)); }
 
         function toast(msg) {
             const t = document.getElementById("toast");
             t.textContent = msg;
             t.classList.add("show");
-            setTimeout(()=>t.classList.remove("show"), 2000);
+            setTimeout(()=>t.classList.remove("show"), 2500);
         }
 
         function showModal(id) {
@@ -437,7 +590,7 @@
         }
 
         function buyHint(level) {
-            const cost = level === 1 ? 10 : 25;
+            const cost = level === 1 ? 15 : 30;
             if(stats.points < cost) {
                 toast("Need " + cost + " points!");
                 return;
@@ -452,32 +605,23 @@
             save();
             updateStats();
             
-            // Reveal next letter(s)
             const letter = TARGET[hintLevel - 1];
             toast("Letter " + hintLevel + ": " + letter);
             
-            // Disable button if not enough points
-            if(stats.points < 10) document.getElementById("hint1").disabled = true;
-            if(stats.points < 25) document.getElementById("hint2").disabled = true;
-        }
-
-        function showAlreadyPlayed() {
-            // Show the answer in a completed state
-            toast("Already played today! Come back tomorrow.");
-            gameOver = true;
-            // Could show yesterday's solution here
+            if(stats.points < 15) document.getElementById("hint1").disabled = true;
+            if(stats.points < 30) document.getElementById("hint2").disabled = true;
         }
 
         function share() {
             const d = today.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
-            let text = `WordPics ${d} ${guesses.length} guesses\n\n`;
-            guesses.forEach(g => {
-                g.split("").forEach((c,i) => {
-                    text += {correct:"🟩",present:"🟨",absent:"⬛"}[getResult(g,i)];
+            let text = `WordPics ${d} ${difficulty.toUpperCase()} ${guesses.length} guesses\n\n`;
+            historyShown.forEach(entry => {
+                entry.guess.split("").forEach((c,i) => {
+                    text += {correct:"🟩",present:"🟨",absent:"⬛"}[entry.results[i]];
                 });
                 text += "\n";
             });
-            text += `\n🔥 Streak: ${stats.streak} | Points: ${stats.points}`;
+            text += `\n🔥 Streak: ${stats.streak} | ${stats.points} pts`;
             navigator.clipboard.writeText(text).then(()=>toast("Copied!"));
         }
 
