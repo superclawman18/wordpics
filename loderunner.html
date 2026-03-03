@@ -189,12 +189,13 @@
             const px = player.x;
             const py = player.y;
             
-            // Check if near ladder (more lenient)
+            // Check if touching ladder (more lenient)
             const tileHere = getTile(px, py);
             const tileAbove = getTile(px, py - 0.5);
-            const onLadder = tileHere === LADDER || tileAbove === LADDER;
+            const tileBelow = getTile(px, py + 0.5);
+            const onLadder = tileHere === LADDER || tileAbove === LADDER || tileBelow === LADDER;
             
-            // Horizontal move
+            // Horizontal move - can always try
             if (dx !== 0) {
                 const newX = px + dx * 0.2;
                 if (!isSolid(newX, py - 0.5) && !isSolid(newX, py + 0.4)) {
@@ -202,13 +203,12 @@
                 }
             }
             
-            // Vertical move
-            const canClimb = onLadder || (dy < 0 && (tileHere === LADDER || tileAbove === LADDER));
-            
-            if (canClimb && dy !== 0) {
+            // Vertical move - can climb if touching ladder anywhere
+            if (onLadder && dy !== 0) {
                 player.y += dy * 0.2;
                 player.onGround = false;
-            } else if (!canClimb) {
+            } else if (!onLadder) {
+                // Gravity only when NOT on ladder
                 if (!isSolid(px, py + 0.5) && !isSolid(px - 0.3, py + 0.5) && !isSolid(px + 0.3, py + 0.5)) {
                     player.y += 0.2;
                     player.onGround = false;
