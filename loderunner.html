@@ -159,6 +159,7 @@
         const keyState = {};
         
         document.addEventListener('keydown', e => {
+            console.log('keydown:', e.key, e.code);
             keyState[e.key] = true;
             keyState[e.code] = true;
             if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','z','x','Z','X'].includes(e.key)) {
@@ -170,13 +171,6 @@
             keyState[e.code] = false;
         });
         
-        function isKeyDown(key) {
-            if (key === 'z' || key === 'x') {
-                return keyState[key] || keyState[key.toUpperCase()] || keyState['Key' + key.toUpperCase()];
-            }
-            return keyState[key] || keyState['Arrow' + key.replace('Arrow', '')];
-        }
-        
         function update() {
             if (lives <= 0) {
                 alert('Game Over!');
@@ -185,12 +179,14 @@
                 return;
             }
             
-            // Movement
+            // Movement - log key state
             let dx = 0, dy = 0;
-            if (keyState['ArrowLeft'] || keyState['KeyA']) dx = -1;
-            if (keyState['ArrowRight'] || keyState['KeyD']) dx = 1;
-            if (keyState['ArrowUp'] || keyState['KeyW']) dy = -1;
-            if (keyState['ArrowDown'] || keyState['KeyS']) dy = 1;
+            if (keyState['ArrowLeft'] || keyState['KeyA']) { dx = -1; console.log('left'); }
+            if (keyState['ArrowRight'] || keyState['KeyD']) { dx = 1; console.log('right'); }
+            if (keyState['ArrowUp'] || keyState['KeyW']) { dy = -1; console.log('up'); }
+            if (keyState['ArrowDown'] || keyState['KeyS']) { dy = 1; console.log('down'); }
+            
+            console.log('dx:', dx, 'dy:', dy, 'player:', player.x, player.y);
             
             const px = player.x;
             const py = player.y;
