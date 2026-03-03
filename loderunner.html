@@ -133,7 +133,8 @@
             goldTotal = 1;
             if (goldTotal < 1) goldTotal = 1;
             
-            player = { x: 2, y: 20, onGround: false };
+            // Spawn on the ladder, not in concrete
+            player = { x: 14, y: 21, onGround: false };
             enemies = [{ x: 15, y: 5 }, { x: 20, y: 8 }];
             
             updateUI();
@@ -159,7 +160,6 @@
         const keyState = {};
         
         document.addEventListener('keydown', e => {
-            console.log('keydown:', e.key, e.code);
             keyState[e.key] = true;
             keyState[e.code] = true;
             if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','z','x','Z','X'].includes(e.key)) {
@@ -179,14 +179,12 @@
                 return;
             }
             
-            // Movement - log key state
+            // Movement
             let dx = 0, dy = 0;
-            if (keyState['ArrowLeft'] || keyState['KeyA']) { dx = -1; console.log('left'); }
-            if (keyState['ArrowRight'] || keyState['KeyD']) { dx = 1; console.log('right'); }
-            if (keyState['ArrowUp'] || keyState['KeyW']) { dy = -1; console.log('up'); }
-            if (keyState['ArrowDown'] || keyState['KeyS']) { dy = 1; console.log('down'); }
-            
-            console.log('dx:', dx, 'dy:', dy, 'player:', player.x, player.y);
+            if (keyState['ArrowLeft'] || keyState['KeyA']) dx = -1;
+            if (keyState['ArrowRight'] || keyState['KeyD']) dx = 1;
+            if (keyState['ArrowUp'] || keyState['KeyW']) dy = -1;
+            if (keyState['ArrowDown'] || keyState['KeyS']) dy = 1;
             
             const px = player.x;
             const py = player.y;
