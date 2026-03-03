@@ -182,8 +182,10 @@
             const px = player.x;
             const py = player.y;
             
-            // Check ladder
-            const onLadder = getTile(px, py) === LADDER || getTile(px, py - 0.5) === LADDER;
+            // Check if near ladder (more lenient)
+            const tileHere = getTile(px, py);
+            const tileAbove = getTile(px, py - 0.5);
+            const onLadder = tileHere === LADDER || tileAbove === LADDER;
             
             // Horizontal move
             if (dx !== 0) {
@@ -193,13 +195,16 @@
                 }
             }
             
-            // Vertical move (ladder or fall)
-            if (onLadder && dy !== 0) {
+            // Vertical move - can climb if on ladder OR can climb if pressing up and near ladder
+            const canClimb = onLadder || (dy < 0 && (tileHere === LADDER || tileAbove === LADDER));
+            
+            if (canClimb && dy !== 0) {
                 player.y += dy * 0.15;
-            } else if (!onLadder) {
+                player.onGround = false;
+            } else if (!canClimb) {
                 // Gravity
                 if (!isSolid(px, py + 0.5) && !isSolid(px - 0.3, py + 0.5) && !isSolid(px + 0.3, py + 0.5)) {
-                    player.y += 0.1;
+                    player.y += 0.15;
                     player.onGround = false;
                 } else {
                     player.onGround = true;
@@ -222,19 +227,21 @@
                 }
             }
             
-            // Digging
-            if ((keys['z'] || keys['Z']) && player.onGround) {
+            // Digging - can dig if standing next to a brick
+            const canDig = player.onGround || getTile(player.x, player.y) === LADDER;
+            
+            if ((keys['z'] || keys['Z']) && canDig) {
                 const hx = Math.floor(player.x) - 1;
                 const hy = Math.floor(player.y);
-                if (hx >= 0 && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
+                if (hx >= 0 && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
                 }
             }
-            if ((keys['x'] || keys['X']) && player.onGround) {
+            if ((keys['x'] || keys['X']) && canDig) {
                 const hx = Math.floor(player.x) + 1;
                 const hy = Math.floor(player.y);
-                if (hx < COLS && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
+                if (hx < COLS && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
                 }
