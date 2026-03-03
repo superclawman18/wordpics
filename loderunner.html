@@ -86,9 +86,10 @@
             "1111000000000300000030000011",
             "1000000000000300000030000001",
             "1000000000000300000030000001",
-            "1000000000000000000000000001",
-            "1000000000000000000000000001",
-            "1000000000000000000000000001",
+            "1000001110000000000011100001",
+            "1000001110000000000011100001",
+            "1000001110000000000011100001",
+            "1000001110000000000011100001",
             "1000000000000000000000000001",
             "1000000000000000000000000001",
             "1111111111111111111111111111",
@@ -136,13 +137,6 @@
             player = { x: 2, y: 20, onGround: false };
             enemies = [{ x: 15, y: 5 }, { x: 20, y: 8 }];
             
-            // Debug: log brick positions
-            for (let y = 0; y < ROWS; y++) {
-                for (let x = 0; x < COLS; x++) {
-                    if (map[y][x] === BRICK) console.log('brick at', x, y);
-                }
-            }
-            
             updateUI();
         }
         
@@ -163,13 +157,26 @@
         }
         
         // Input
+        const keyState = {};
+        
         document.addEventListener('keydown', e => {
-            keys[e.key] = true;
+            keyState[e.key] = true;
+            keyState[e.code] = true;
             if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','z','x','Z','X'].includes(e.key)) {
                 e.preventDefault();
             }
         });
-        document.addEventListener('keyup', e => keys[e.key] = false);
+        document.addEventListener('keyup', e => {
+            keyState[e.key] = false;
+            keyState[e.code] = false;
+        });
+        
+        function isKeyDown(key) {
+            if (key === 'z' || key === 'x') {
+                return keyState[key] || keyState[key.toUpperCase()] || keyState['Key' + key.toUpperCase()];
+            }
+            return keyState[key] || keyState['Arrow' + key.replace('Arrow', '')];
+        }
         
         function update() {
             if (lives <= 0) {
@@ -181,10 +188,10 @@
             
             // Movement
             let dx = 0, dy = 0;
-            if (keys['ArrowLeft']) dx = -1;
-            if (keys['ArrowRight']) dx = 1;
-            if (keys['ArrowUp']) dy = -1;
-            if (keys['ArrowDown']) dy = 1;
+            if (keyState['ArrowLeft'] || keyState['KeyA']) dx = -1;
+            if (keyState['ArrowRight'] || keyState['KeyD']) dx = 1;
+            if (keyState['ArrowUp'] || keyState['KeyW']) dy = -1;
+            if (keyState['ArrowDown'] || keyState['KeyS']) dy = 1;
             
             const px = player.x;
             const py = player.y;
@@ -196,29 +203,27 @@
             
             // Horizontal move
             if (dx !== 0) {
-                const newX = px + dx * 0.15;
+                const newX = px + dx * 0.2;
                 if (!isSolid(newX, py - 0.5) && !isSolid(newX, py + 0.4)) {
                     player.x = newX;
                 }
             }
             
-            // Vertical move - can climb if on ladder OR can climb if pressing up and near ladder
+            // Vertical move
             const canClimb = onLadder || (dy < 0 && (tileHere === LADDER || tileAbove === LADDER));
             
             if (canClimb && dy !== 0) {
-                player.y += dy * 0.15;
+                player.y += dy * 0.2;
                 player.onGround = false;
             } else if (!canClimb) {
-                // Gravity
                 if (!isSolid(px, py + 0.5) && !isSolid(px - 0.3, py + 0.5) && !isSolid(px + 0.3, py + 0.5)) {
-                    player.y += 0.15;
+                    player.y += 0.2;
                     player.onGround = false;
                 } else {
                     player.onGround = true;
                 }
             }
             
-            // Clamp
             player.x = Math.max(0, Math.min(COLS - 1, player.x));
             player.y = Math.max(0, Math.min(ROWS - 1, player.y));
             
@@ -234,20 +239,18 @@
                 }
             }
             
-            // Digging - can dig if standing next to a brick
+            // Digging
             const canDig = player.onGround || getTile(player.x, player.y) === LADDER;
-            console.log('dig: onGround=' + player.onGround + ' canDig=' + canDig + ' z=' + keys['z'] + ' px=' + player.x + ' py=' + player.y);
             
-            if ((keys['z'] || keys['Z']) && canDig) {
+            if ((keyState['z'] || keyState['Z'] || keyState['KeyZ']) && canDig) {
                 const hx = Math.floor(player.x) - 1;
                 const hy = Math.floor(player.y);
-                console.log('try dig left: hx=' + hx + ' hy=' + hy + ' tile=' + map[hy]?.[hx]);
                 if (hx >= 0 && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
                 }
             }
-            if ((keys['x'] || keys['X']) && canDig) {
+            if ((keyState['x'] || keyState['X'] || keyState['KeyX']) && canDig) {
                 const hx = Math.floor(player.x) + 1;
                 const hy = Math.floor(player.y);
                 if (hx < COLS && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
