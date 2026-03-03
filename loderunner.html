@@ -233,19 +233,19 @@
             }
             
             // Digging
-            const canDig = player.onGround || getTile(player.x, player.y) === LADDER;
+            const canDig = player.onGround || onLadder;
             
             if ((keyState['z'] || keyState['Z'] || keyState['KeyZ']) && canDig) {
-                const hx = Math.floor(player.x) - 1;
-                const hy = Math.floor(player.y);
+                const hx = Math.floor(player.x + 0.5) - 1;
+                const hy = Math.floor(player.y + 0.9); // Target the row below/at feet
                 if (hx >= 0 && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
                 }
             }
             if ((keyState['x'] || keyState['X'] || keyState['KeyX']) && canDig) {
-                const hx = Math.floor(player.x) + 1;
-                const hy = Math.floor(player.y);
+                const hx = Math.floor(player.x + 0.5) + 1;
+                const hy = Math.floor(player.y + 0.9);
                 if (hx < COLS && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
