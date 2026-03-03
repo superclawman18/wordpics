@@ -136,6 +136,13 @@
             player = { x: 2, y: 20, onGround: false };
             enemies = [{ x: 15, y: 5 }, { x: 20, y: 8 }];
             
+            // Debug: log brick positions
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (map[y][x] === BRICK) console.log('brick at', x, y);
+                }
+            }
+            
             updateUI();
         }
         
@@ -229,10 +236,12 @@
             
             // Digging - can dig if standing next to a brick
             const canDig = player.onGround || getTile(player.x, player.y) === LADDER;
+            console.log('dig: onGround=' + player.onGround + ' canDig=' + canDig + ' z=' + keys['z'] + ' px=' + player.x + ' py=' + player.y);
             
             if ((keys['z'] || keys['Z']) && canDig) {
                 const hx = Math.floor(player.x) - 1;
                 const hy = Math.floor(player.y);
+                console.log('try dig left: hx=' + hx + ' hy=' + hy + ' tile=' + map[hy]?.[hx]);
                 if (hx >= 0 && map[hy] && map[hy][hx] === BRICK && !holes.some(h => h.x === hx && h.y === hy)) {
                     holes.push({ x: hx, y: hy, timer: 300 });
                     map[hy][hx] = EMPTY;
