@@ -1,0 +1,70 @@
+{
+  "summary_count": 6,
+  "max_age_days": 3,
+  "impact_keywords": [
+    "openai",
+    "anthropic",
+    "google",
+    "microsoft",
+    "meta",
+    "invest",
+    "fund",
+    "acquire",
+    "policy",
+    "safety",
+    "regulation",
+    "release",
+    "launch",
+    "deploy",
+    "llm",
+    "model",
+    "foundation model",
+    "ai",
+    "multimodal",
+    "robot",
+    "automation",
+    "ethic"
+  ],
+  "sources": [
+    {
+      "name": "Reddit /r/artificial",
+      "url": "https://www.reddit.com/r/artificial/.rss",
+      "type": "news"
+    },
+    {
+      "name": "Reddit /r/MachineLearning",
+      "url": "https://www.reddit.com/r/MachineLearning/.rss",
+      "type": "news"
+    },
+    {
+      "name": "Reddit /r/OpenAI",
+      "url": "https://www.reddit.com/r/OpenAI/.rss",
+      "type": "resource"
+    },
+    {
+      "name": "Hacker News (front page)",
+      "url": "https://hnrss.org/frontpage?points=200&count=25",
+      "type": "news"
+    },
+    {
+      "name": "MIT Technology Review",
+      "url": "https://www.technologyreview.com/feed/",
+      "type": "resource"
+    },
+    {
+      "name": "The Verge",
+      "url": "https://www.theverge.com/rss/index.xml",
+      "type": "resource"
+    },
+    {
+      "name": "VentureBeat AI",
+      "url": "https://venturebeat.com/category/ai/feed/",
+      "type": "resource"
+    },
+    {
+      "name": "The New Stack",
+      "url": "https://thenewstack.io/feed/",
+      "type": "resource"
+    }
+  ]
+}
